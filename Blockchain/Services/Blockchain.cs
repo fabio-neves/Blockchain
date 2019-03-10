@@ -18,6 +18,7 @@ namespace Blockchain.Services
 
     public class Blockchain : IBlockchainService
     {
+        private static readonly HttpClient _httpClient = new HttpClient();
         private BlockchainOptions _options;
         private List<Block> _chain;
         private List<Transaction> _currentTransactions;
@@ -115,14 +116,14 @@ namespace Blockchain.Services
 
             byte[] hash = hashstring.ComputeHash(bytes);
 
-            string result = string.Empty;
+            var result = new StringBuilder();
 
             foreach (byte c in hash)
             {
-                result += String.Format("{0:x2}", c);
+                result.Append(String.Format("{0:x2}", c));
             }
 
-            return result;
+            return result.ToString();
         }
 
         private bool IsValidChain(List<Block> chain)
@@ -160,22 +161,19 @@ namespace Blockchain.Services
 
             List<Block> newChain = null;
 
-            using (var httpClient = new HttpClient())
+            foreach (var s in _nodes)
             {
-                foreach (var s in _nodes)
+                var result = await _httpClient.GetAsync(s);
+                if (result.IsSuccessStatusCode)
                 {
-                    var result = await httpClient.GetAsync(s);
-                    if (result.IsSuccessStatusCode)
+                    var json = await result.Content.ReadAsStringAsync();
+
+                    var chain = JsonConvert.DeserializeObject<List<Block>>(json);
+
+                    if (IsValidChain(chain) && maxsize < chain.Count)
                     {
-                        var json = result.Content.ReadAsStringAsync().Result;
-
-                        var chain = JsonConvert.DeserializeObject<List<Block>>(json);
-
-                        if (IsValidChain(chain) && maxsize < chain.Count)
-                        {
-                            maxsize = chain.Count;
-                            newChain = chain;
-                        }
+                        maxsize = chain.Count;
+                        newChain = chain;
                     }
                 }
             }
