@@ -1,0 +1,35 @@
+version: '2.4'
+services:
+  node01:
+    ports:
+     - "5000:80"
+    build:
+      context: .
+    image: blockchain00
+    environment:
+      - "Blockchain__NodesAddresses__0=http://node02/Chain"
+      - "Blockchain__NodesAddresses__1=http://node03/Chain"
+      - "Blockchain__NodeId=fbb1ce0e-9a20-4e4c-9ba3-0d080726c16e"      
+    container_name: node01
+  node02:
+    ports:
+     - "5001:80"
+    build:
+      context: .
+    image: blockchain00
+    environment:
+      - "Blockchain__NodesAddresses__0=http://node01/Chain"
+      - "Blockchain__NodesAddresses__1=http://node03/Chain"
+      - "Blockchain__NodeId=b71864ad-ba57-4969-bf3c-6b842eb595e2"
+    container_name: node02
+  node03:
+    ports:
+     - "5002:80"
+    build:
+      context: .
+    image: blockchain00
+    environment:
+      - "Blockchain__NodesAddresses__0=http://node01/Chain"
+      - "Blockchain__NodesAddresses__1=http://node02/Chain"
+      - "Blockchain__NodeId=3296c561-118b-4f21-8094-834f36117948"
+    container_name: node03

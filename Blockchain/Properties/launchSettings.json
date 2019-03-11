@@ -12,7 +12,10 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "Blockchain__NodesAddresses__0": "http://node01/Chain",
+        "Blockchain__NodesAddresses__1": "http://node03/Chain",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Blockchain__NodeId": "b71864ad-ba57-4969-bf3c-6b842eb595e2"
       }
     },
     "Blockchain": {

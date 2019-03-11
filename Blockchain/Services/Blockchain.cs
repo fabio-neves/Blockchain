@@ -1,5 +1,6 @@
 ﻿using Blockchain.Helpers;
 using Blockchain.Models;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -11,25 +12,29 @@ using System.Threading.Tasks;
 
 namespace Blockchain.Services
 {
-    public class BlockchainOptions
-    {
-        public string NodeId { get; set; }
-    }
-
     public class Blockchain : IBlockchainService
     {
         private static readonly HttpClient _httpClient = new HttpClient();
         private BlockchainOptions _options;
         private List<Block> _chain;
         private List<Transaction> _currentTransactions;
-        private HashSet<string> _nodes;
+        private List<Uri> _nodes;
 
-        public Blockchain(BlockchainOptions options)
+        public Blockchain(IOptions<BlockchainOptions> options)
         {
-            _options = options;
+            _options = options.Value;
             _chain = new List<Block>();
             _currentTransactions = new List<Transaction>();
-            _nodes = new HashSet<string>();
+            _nodes = new List<Uri>();
+
+            if (_options.NodesAddresses != null)
+            {
+                foreach (var node in _options.NodesAddresses)
+                {
+                    AddNode(node);
+                }
+            }
+
             AddBlock(1, "100");
         }
 
@@ -40,7 +45,6 @@ namespace Blockchain.Services
                 return _chain.LastOrDefault();
             }
         }
-
 
         private int AddTransaction(string sender, string recipient, int amount)
         {
@@ -139,7 +143,7 @@ namespace Blockchain.Services
             {
                 var block = chain[idx];
 
-                if (block.PreviousHash == Hash(lastBlock))
+                if (block.PreviousHash != Hash(lastBlock))
                 {
                     return false;
                 }
@@ -209,7 +213,7 @@ namespace Blockchain.Services
             Uri result;
             if (Uri.TryCreate(url, UriKind.Absolute, out result))
             {
-                _nodes.Add(string.Format("{0}:{1}", result.Host, result.Port));
+                _nodes.Add(result);
                 return true;
             }
             else
@@ -220,7 +224,7 @@ namespace Blockchain.Services
 
         public IEnumerable<string> ListNodes()
         {
-            return _nodes;
+            return (from uri in _nodes select string.Format("{0}:{1}", uri.Host, uri.Port)).ToArray();
         }
     }
 }
